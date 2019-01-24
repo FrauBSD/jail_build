@@ -5,8 +5,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.3 $
-# $Date: 2019-01-24 10:21:22 -0800 $
+# $Revision: 1.0.4 $
+# $Date: 2019-01-24 10:27:10 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -58,12 +58,12 @@
 #
 # Default location of RIDS repository
 #
-: ${JAIL_BUILD_REPOS:="/usr/repos"}
+: ${JAIL_BUILD_REPOS:=/usr/repos}
 
 #
 # Default directory to build new jails in
 #
-: ${JAIL_BUILD_DESTDIR:="/usr/jail"}
+: ${JAIL_BUILD_DESTDIR:=/usr/jail}
 
 #
 # Default verbosity (toggles verbose output when building the jail)
@@ -73,7 +73,7 @@
 #
 # Default directory to store dialog(1) temporary files
 #
-: ${DIALOG_TMPDIR:="/tmp"}
+: ${DIALOG_TMPDIR:=/tmp}
 
 ############################################################ GLOBALS
 
