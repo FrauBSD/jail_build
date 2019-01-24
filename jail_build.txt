@@ -1,0 +1,624 @@
+#!/bin/sh
+# -*- tab-width:  4 -*- ;; Emacs
+# vi: set tabstop=4     :: Vi/ViM
+#
+# Revision: 1.0
+# Last Modified: October 13th, 2010
+############################################################ COPYRIGHT
+#
+# (c)2010. Devin Teske. All Rights Reserved.
+#
+# Redistribution and use in source and binary forms, with or without
+# modification, are permitted provided that the following conditions
+# are met:
+# 1. Redistributions of source code must retain the above copyright
+#    notice, this list of conditions and the following disclaimer.
+# 2. Redistributions in binary form must reproduce the above copyright
+#    notice, this list of conditions and the following disclaimer in the
+#    documentation and/or other materials provided with the distribution.
+#
+# THIS SOFTWARE IS PROVIDED BY THE AUTHOR AND CONTRIBUTORS ``AS IS'' AND
+# ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING BUT NOT LIMITED TO, THE
+# IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+# ARE DISCLAIMED.  IN NO EVENT SHALL THE AUTHOR OR CONTRIBUTORS BE LIABLE
+# FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+# DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS
+# OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+# HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT
+# LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
+# OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
+# SUCH DAMAGE.
+#
+# AUTHOR      DATE      DESCRIPTION
+# dteske   2010.09.17   Initial version.
+#
+############################################################ INFORMATION
+#
+# Command Usage:
+#
+#   jail_build [OPTIONS]
+#
+#   OPTIONS:
+#   	-h    Print this message to stderr and exit.
+#   	-v    Verbose. Enables verbose output during build.
+#   	-q    Quiet. Disables verbose output.
+#
+#   ENVIRONMENT:
+#   	JAIL_BUILD_REPOS      Location of FreeBSD repository where binary
+#   	                      distributions are held (default:`/usr/repos').
+#   	JAIL_BUILD_DESTDIR    Default directory to build new jails in
+#   	                      (default: `/usr/jail').
+#   	JAIL_BUILD_VERBOSE    Verbosity. Must be zero or one (default: `0').
+#   	DIALOG_TMPDIR         Directory to store dialog(1) temporary files
+#   	                      (default: `/tmp').
+#
+############################################################ CONFIGURATION
+
+#
+# Default location of RIDS repository
+#
+: ${JAIL_BUILD_REPOS:="/usr/repos"}
+
+#
+# Default directory to build new jails in
+#
+: ${JAIL_BUILD_DESTDIR:="/usr/jail"}
+
+#
+# Default verbosity (toggles verbose output when building the jail)
+#
+: ${JAIL_BUILD_VERBOSE:=0}
+
+#
+# Default directory to store dialog(1) temporary files
+#
+: ${DIALOG_TMPDIR:="/tmp"}
+
+############################################################ GLOBALS
+
+# Global exit status variables
+SUCCESS=0
+FAILURE=1
+
+#
+# Program name
+#
+progname="${0##*/}"
+
+#
+# Settings used while interacting with dialog(1)
+#
+DIALOG_MENU_TAGS="123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+############################################################ FUNCTIONS
+
+# fprintf $fd $fmt [ $opts ... ]
+#
+# Like printf, except allows you to print to a specific file-descriptor. Useful
+# for printing to stderr (fd=2) or some other known file-descriptor.
+#
+fprintf()
+{
+	local fd=$1
+	[ $# -gt 1 ] || return $FAILURE
+	shift 1
+	printf "$@" >&$fd
+}
+
+# eprintf $fmt [ $opts ... ]
+#
+# Print a message to stderr (fd=2).
+#
+eprintf()
+{
+	fprintf 2 "$@"
+}
+
+# die [ $fmt [ $opts ... ]]
+#
+# Optionally print a message to stderr before exiting with failure status.
+#
+die()
+{
+	local fmt="$1"
+	[ $# -gt 0 ] && shift 1
+	[  "$fmt"  ] && eprintf "$fmt\n" "$@"
+
+	exit $FAILURE
+}
+
+# usage
+#
+# Prints a short syntax statement and exits.
+#
+usage()
+{
+	local optfmt="\t%-6s%s\n"
+	local envfmt="\t%-22s%s\n"
+
+	eprintf "Usage: %s [OPTIONS]\n" "$progname"
+
+	eprintf "OPTIONS:\n"
+	eprintf "$optfmt" "-h" \
+	        "Print this message to stderr and exit."
+	eprintf "$optfmt" "-v" \
+	        "Verbose. Enables verbose output during build."
+	eprintf "$optfmt" "-q" \
+	        "Quiet. Disables verbose output."
+	eprintf "\n"
+
+	eprintf "ENVIRONMENT:\n"
+	eprintf "$envfmt" "JAIL_BUILD_REPOS" \
+	        "Location of FreeBSD repository where binary"
+	eprintf "$envfmt" "" \
+	        "(default: \`/usr/repos')"
+	eprintf "$envfmt" "JAIL_BUILD_DESTDIR" \
+	        "Default directory to build new jails in"
+	eprintf "$envfmt" "" \
+	        "(default: \`/usr/jail')"
+	eprintf "$envfmt" "JAIL_BUILD_VERBOSE" \
+	        "Verbosity. Must be zero or one (default: \`0')"
+	eprintf "$envfmt" "DIALOG_TMPDIR" \
+	        "Directory to store dialog(1) temporary files"
+	eprintf "$envfmt" "" \
+	        "(default: \`/tmp')"
+
+	die
+}
+
+# dialog_menutag2item $tag_chosen $tag1 $item1 $tag2 $item2 ...
+#
+# To use the `--menu' option of dialog(1) you must pass an ordered list of
+# tag/item pairs on the command-line. When the user selects a menu option the
+# tag for that item is printed to stderr.
+#
+# This function allows you to dereference the tag chosen by the user back into
+# the item associated with said tag.
+#
+# Pass the tag chosen by the user as the first argument, followed by the
+# ordered list of tag/item pairs (HINT: use the same tag/item list as was
+# passed to dialog(1) for consistency).
+#
+# If the tag cannot be found, NULL is returned.
+#
+dialog_menutag2item()
+{
+	local tag="$1" tagn item
+	shift 1
+
+	while [ $# -gt 0 ]; do
+		tagn="$1"
+		item="$2"
+		shift 2
+
+		if [ "$tag" = "$tagn" ]; then
+			echo "$item"
+			return
+		fi
+	done
+}
+
+############################################################ MAIN SOURCE
+
+#
+# Perform sanity checks
+#
+[ -e "$JAIL_BUILD_REPOS" ] \
+	|| die "%s" "$progname: $JAIL_BUILD_REPOS: No such file or directory"
+[ -d "$( eval realpath "$JAIL_BUILD_REPOS" )" ] \
+	|| die "%s" "$progname: $JAIL_BUILD_REPOS: Not a directory"
+[ -e "$DIALOG_TMPDIR" ] \
+	|| die "%s" "$progname: $DIALOG_TMPDIR: No such file or directory"
+[ -d "$( eval realpath "$DIALOG_TMPDIR" )" ] \
+	|| die "%s" "$progname: $DIALOG_TMPDIR: Not a directory"
+
+#
+# Process command-line arguments
+#
+while getopts hvq flag; do
+	case "$flag" in
+	h) usage;;
+	d) JAIL_BUILD_SHOW_DEPS=1;;
+	v) JAIL_BUILD_VERBOSE=1;;
+	q) JAIL_BUILD_VERBOSE=0;;
+	\?) usage;;
+	esac
+done
+shift $(( $OPTIND - 1 ))
+
+#
+# Process command-line options.
+#
+verbose=
+quiet=
+if [ "$JAIL_BUILD_VERBOSE" = "1" ]; then
+	verbose=1
+else
+	quiet=1
+fi
+
+#
+# Display a message to let the user know we're working...
+#
+dialog --title "$progname" \
+       --infobox "Building list of repositories to choose from..." -1 -1
+
+#
+# Get a list of viable repositories to build our jail from
+#
+repositories="$(
+	find -H "$JAIL_BUILD_REPOS" -type d -maxdepth 2 \
+		-name '*-RELEASE' -o \
+		-name '*-STABLE'  -o \
+		-name '*-CURRENT'    \
+	| sort | \
+	(
+		index=1
+		while read -r dirname; do
+			[ $index -le ${#DIALOG_MENU_TAGS} ] || break
+			tag="$( echo "$DIALOG_MENU_TAGS" \
+				| awk "{print substr(\$1,$index,1)}" )"
+			echo "'$tag ${dirname##*/}'"
+			echo "'$dirname'"
+			index=$(( $index + 1 ))
+		done
+	)
+)"
+[ "$repositories" ] \
+	|| die "No repositories found in \`%s'." "$JAIL_BUILD_REPOS"
+
+#
+# Prompt the user to select which repository to create the new jail from.
+#
+eval dialog \
+	--clear --title "'$progname'" \
+	--hline "'Press arrows, TAB or ENTER'" \
+	--menu "'Select repository to build new jail from:'" -1 -1 4 \
+	$repositories \
+	2> "$DIALOG_TMPDIR/dialog.menu.$$"
+retval=$?
+
+#
+# Read in the user's choice and clean-up
+#
+tag="$( cat "$DIALOG_TMPDIR/dialog.menu.$$" )"
+rm -f "$DIALOG_TMPDIR/dialog.menu.$$"
+
+# Exit if the user chose "Cancel" (1) or pressed Esc (255)
+[ $retval -eq 0 ] || die "User cancelled."
+
+#
+# Determine repos path by matching on the unique tag entry.
+#
+repos="$( eval dialog_menutag2item "'$tag'" $repositories )"
+
+#
+# Prompt the user for location to install new jail to
+#
+dialog \
+	--title "$progname" \
+	--inputbox "Root directory where the new jail will live:" -1 -1 \
+	"$JAIL_BUILD_DESTDIR/<jail_hostname>" \
+	2> "$DIALOG_TMPDIR/dialog.inputbox.$$"
+retval=$?
+
+#
+# Read in the user's entry and clean-up
+#
+destdir="$( cat "$DIALOG_TMPDIR/dialog.inputbox.$$" )"
+rm -f "$DIALOG_TMPDIR/dialog.inputbox.$$"
+
+# Exit if the user chose "Cancel" (1) or pressed Esc (255)
+[ $retval -eq 0 ] || die "User cancelled."
+
+#
+# Get the parent directory of the path specified
+#
+parentdir="${destdir%/*}"
+[ "$parentdir" = "$destdir" ] && parentdir="."
+[ "$parentdir" ] || parentdir="."
+
+#
+# Perform full path expansion on paths specified
+# NOTE: Expands tilde, environment variables, symbolic links, etc.
+#
+parentdir="$( eval realpath "$parentdir" )"
+# If the path was invalid, we'll get back NULL (if so, perform fixup)
+[ "$parentdir" ] || parentdir="${destdir%/*}"
+[ "$parentdir" = "$destdir" ] && parentdir="."
+destdir="$parentdir/${destdir##*/}"
+
+#
+# Verify that the parent directory exists
+#
+if [ ! -e "$parentdir" ]; then
+	#
+	# It doesn't exist...
+	# ... offer to create it.
+	#
+	dialog --title "$progname" \
+	       --hline "Press arrows, TAB or ENTER" \
+	       --yesno "The parent directory ($parentdir) of the destination \
+	                you have entered does not exist. Create it now?" 7 60
+
+	[ $? -eq 0 ] || die "User cancelled."
+	mkdir -p "$parentdir" || die "%s" \
+		"$progname: mkdir: Unable to create directory \`$parentdir'"
+else
+	# Make sure it's a directory
+	[ -d "$parentdir" ] \
+		|| die "%s" "$progname: $parentdir: Not a directory"
+fi
+
+#
+# Check to see if the destination directory already exists.
+#
+if [ -d "$destdir" ]; then
+	dialog --clear \
+	       --title "$progname" \
+	       --hline "Press arrows, TAB or ENTER" \
+	       --yesno "The destination directory ($destdir) already exists. \
+	                Are you sure that you wish to proceed?" 7 60
+
+	[ $? -eq 0 ] || die "User cancelled."
+
+	#
+	# Verify that the destination directory is writable
+	#
+	# NOTE: Unless TrustedBSD is enabled, the `root' super-user always
+	#       has write ability, even when the permissions are `0000'.
+	#
+	[ -w "$destdir" ] \
+		|| die "%s" "$progname: $destdir: Permission denied."
+else
+	#
+	# Verify that the parent directory is writable
+	#
+	# NOTE: Unless TrustedBSD is enabled, the `root' super-user always
+	#       has write ability, even when the permissions are `0000'.
+	#
+	[ -w "$parentdir" ] || die "%s: %s: %s" "$progname" "$parentdir" \
+		"Cannot create jail sub-directory. Permission denied."
+fi
+
+#
+# Determine canonical release from repos location
+#
+release="${repos##*/}"
+release="${release%-*}" # Chop "-(RELEASE|STABLE|CURRENT)" suffix
+
+#
+# Default base distribution to install.
+#
+case "$release" in
+     1.*) dists="tarballs/bindist/bin_tgz";;
+ [234].*) dists="bin/bin";;
+[5678].*) dists="base/base";;
+*)
+	# Fallback based on setup of -CURRENT
+	dists="base/base";;
+esac
+
+#
+# Add compat distributions for select [older] repositories
+# NOTE: In newer releases (6.0+), these are now packages
+#
+case "$release" in
+[23].*)
+	dists="$dists compat1x/compat1x"
+	case "$release" in
+	2.0.*|2.1.7.1)
+		dists="$dists compat20/compat20";;
+	2.*|3.0)
+		dists="$dists compat20/compat20 compat21/compat21";;
+	3.*)
+		dists="$dists compat22/compat22";;
+	esac
+	;;
+[45].*)
+	dists="$dists compat22/compat22 compat3x/compat3x"
+	case "$release" in
+	4.[012]|4.[012].*)
+		# compat4x did not appear until 4.3-RELEASE
+		: ;;
+	[45].*)
+		dists="$dists compat4x/compat4x";;
+	esac
+	;;
+esac
+
+#
+# Add encryption library distribution for select [older] repositories
+# NOTE: In newer releases (5.3+), this is now part of the base distribution
+#
+case "$release" in
+[23].*)
+	dists="$dists des/des";;
+4.*|5.[012]|5.[012].*)
+	dists="$dists crypto/crypto";;
+esac
+
+#
+# Add documentation distribution
+# NOTE: doc did not appear until 2.1.5-RELEASE
+#
+case "$release" in
+1.*|2.0.*)
+	# Was not available yet
+	: ;;
+[2345678].*)
+	dists="$dists doc/doc";;
+*)
+	# Fallback based on setup of -CURRENT
+	dists="$dists doc/doc";;
+esac
+
+#
+# Add standard distributions
+# NOTE: Available in all releases except 1.x
+#
+case "$release" in
+1.*)
+	# Was not available yet
+	: ;;
+*)
+	dists="$dists dict/dict games/games info/info"
+	dists="$dists manpages/manpages proflibs/proflibs"
+	;;
+esac
+
+#
+# Add kernel distributions
+# NOTE: Did not appear until 6.1+
+#
+case "$release" in
+[12345].*|6.0|6.0.*)
+	# Was not available yet
+	: ;;
+6.*)
+	dists="$dists kernels/generic kernels/smp";;
+[78].*)
+	dists="$dists kernels/generic";;
+*)
+	# Fallback based on setup of -CURRENT
+	dists="$dists kernels/generic";;
+esac
+
+#
+# Refresh the filesystem
+#
+# NOTE: Required for repositories that live on NFS (otherwise we could get
+# cached responses for `-e', `-f', `-r', and `-w' tests).
+#
+find $repos > /dev/null 2>&1
+
+#
+# Determine which distribution-set(s) exist
+#
+dists_real=
+missing=
+for dist in $dists; do
+	if [ -f "$repos/$dist.tgz" -o -f "$repos/$dist.aa" ]
+	then
+		dists_real="$dists_real${dists_real:+ }$dist"
+
+	elif [ -f "$repos/dists/$dist.tgz" -o -f "$repos/dists/$dist.aa" ]
+	then
+		#
+		# Walnut Creek CD-ROMs 2.0.x-2.1.x placed the distribution
+		# archives in a `dists' sub-directory.
+		#
+		dists_real="$dists_real${dists_real:+ }dists/$dist"
+	else
+		missing="$missing${missing:+ }$dist"
+	fi
+done
+
+#
+# Display review dialog containing all distribution sets (with conditional
+# warning if any sets are missing and with those that are missing displayed at
+# the top of the list).
+#
+eval dialog \
+	--clear --title "'$progname'" \
+	--hline "'Press arrows, TAB or ENTER'" \
+	--tree "':'" \
+	"'Review List of Distribution Sets to be Installed`(
+		[ "$missing" ] \
+			&& echo \
+			&& echo 'WARNING!' Missing distribution-sets \
+			        will be skipped.
+	)`'" -1 -1 13 \
+	"':$repos'" `\
+	(
+		# Show missing distribution-sets first
+		for dist in $missing; do
+			echo "':$repos:$dist (missing)'"
+		done
+		# Show real distribution-sets next
+		for dist in $dists_real; do
+			echo "':$repos:$dist'"
+		done
+	)`
+
+#
+# Exit if the user chose "Cancel" (1) or pressed Esc (255)
+#
+retval=$?
+[ $retval -eq 0 ] || die "User cancelled."
+
+#
+# Last Chance!
+#
+eval dialog \
+	--clear --title "'$progname'" \
+	--hline "'Press arrows, TAB or ENTER'" \
+	--yesno "'`\
+	( echo "Last Chance!  Are you SURE you want to continue the installation?"
+	  echo "If you'\\''re running this on a directory for a jail that already"
+	  echo "exists, then WE STRONGLY ENCOURAGE YOU TO MAKE PROPER BACKUPS"
+	  echo "before proceeding!"
+	  echo
+	  echo "We can take no responsibility for lost contents!"
+	)`'" -1 -1
+[ $? -eq 0 ] || die "User cancelled."
+
+#
+# Unpack the repository into jail root
+#
+mkdir -p "$destdir"
+for dist in $dists_real; do
+	dist_set="$dist" # for display
+	dist_path="${dist%/*}"  # everything up to last slash
+	dist_name="${dist##*/}" # everything after last slash
+	[ "$dist_name" = "$dist_path" ] \
+		&& dist_set="$dist_name"
+
+	[ "$verbose" ] || dialog --title "$progname" --infobox \
+		"Unpacking $dist_set distribution" -1 -1
+	
+	if [ -e "$repos/$dist.tgz" ]; then
+		eval tar --unlink -pzx${verbose:+v}f "'$repos/$dist.tgz'" \
+			-C "'$destdir'" ${quiet:+"> /dev/null 2>&1"}
+		retval=$?
+	elif [ -e "$repos/$dist.aa" ]; then
+		eval cat $( find "$repos/$dist_path" \
+			-name "$dist_name.??" -exec echo "'{}'" ';' \
+		) '|' tar --unlink -pzx${verbose:+v}f - -C "'$destdir'" \
+			${quiet:+"> /dev/null 2>&1"}
+		retval=$?
+	fi
+
+	if [ -f "$repos/$dist.mtree" ]; then
+		[ "$verbose" ] || dialog --title "$progname" --infobox \
+			"Running mtree for $dist_set distribution" -1 -1
+		eval mtree -eU -f "'$repos/$dist.mtree'" -p "'$destdir'" \
+			${quiet:+"> /dev/null 2>&1"}
+	fi
+done
+
+#
+# Run final mtree commands
+#
+for m in root var usr; do
+	[ -f "$destdir/etc/mtree/BSD.$m.dist" ] || continue
+
+	case "$m" in
+	root) mdir=;;
+	   *) mdir="$m";;
+	esac
+
+	[ "$verbose" ] || dialog --title "$progname" --infobox \
+		"Running mtree on $m filesystem" -1 -1
+
+	eval mtree -eU \
+		-f "$destdir/etc/mtree/BSD.$m.dist" \
+		-p "$destdir/$mdir" \
+		${quiet:+"> /dev/null 2>&1"}
+done
+
+#
+# Show success
+#
+[ "$verbose" ] || dialog --clear
+echo "Jail successfully created."
