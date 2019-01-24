@@ -27,8 +27,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.1.0+4 $
-# $Date: 2019-01-24 11:32:44 -0800 $
+# $Revision: 1.1.1 $
+# $Date: 2019-01-24 11:36:18 -0800 $
 #
 ############################################################ INFORMATION
 #
@@ -237,7 +237,7 @@ repositories="$(
 	die "No repositories found in \`%s'." "$JAIL_BUILD_REPOS"
 
 #
-# Prompt the user to select which repository to create the new jail from.
+# Prompt the user to select which repository to create the new jail from
 #
 eval dialog \
 	--clear --title "'$pgm'" \
@@ -257,7 +257,7 @@ rm -f "$DIALOG_TMPDIR/dialog.menu.$$"
 [ $retval -eq 0 ] || die "User cancelled."
 
 #
-# Determine repos path by matching on the unique tag entry.
+# Determine repos path by matching on the unique tag entry
 #
 repos="$( eval dialog_menutag2item "'$tag'" $repositories )"
 
@@ -321,7 +321,7 @@ else
 fi
 
 #
-# Check to see if the destination directory already exists.
+# Check to see if the destination directory already exists
 #
 if [ -d "$destdir" ]; then
 	dialog --clear \
@@ -358,7 +358,7 @@ release="${repos##*/}"
 release="${release%-*}" # Chop "-(RELEASE|STABLE|CURRENT)" suffix
 
 #
-# Default base distribution to install.
+# Default base distribution to install
 #
 case "$release" in
      1.*) dists="tarballs/bindist/bin_tgz";;
@@ -589,3 +589,7 @@ done
 #
 [ "$verbose" ] || dialog --clear
 echo "Jail successfully created."
+
+################################################################################
+# END
+################################################################################
