@@ -1,4 +1,4 @@
-[//]: # ($FrauBSD: jail_build/README.md 2019-01-24 12:06:29 -0800 freebsdfrau $)
+[//]: # ($FrauBSD: jail_build/README.md 2019-01-24 12:07:36 -0800 freebsdfrau $)
 
 # Welcome to [FrauBSD.org/jail\_build](https://fraubsd.org/jail_build)!
 
@@ -25,4 +25,4 @@ This will ensure the FrauBSD keyword is expanded/updated for each commit.
 
 ## Getting Started
 
-`TODO`
+`TODO` (document how to setup /usr/repos -- containing binary dist dirs)
