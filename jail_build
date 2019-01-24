@@ -4,8 +4,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.9+1 $
-# $Date: 2019-01-24 10:59:39 -0800 $
+# $Revision: 1.0.9+2 $
+# $Date: 2019-01-24 11:01:39 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -178,18 +178,6 @@ dialog_menutag2item()
 ############################################################ MAIN SOURCE
 
 #
-# Perform sanity checks
-#
-[ -e "$JAIL_BUILD_REPOS" ] ||
-	die "%s: %s: No such file or directory" "$pgm" "$JAIL_BUILD_REPOS"
-[ -d "$( eval realpath "$JAIL_BUILD_REPOS" )" ] ||
-	die "%s: %s: Not a directory" "$pgm" "$JAIL_BUILD_REPOS"
-[ -e "$DIALOG_TMPDIR" ] ||
-	die "%s: %s: No such file or directory" "$pgm" "$DIALOG_TMPDIR"
-[ -d "$( eval realpath "$DIALOG_TMPDIR" )" ] ||
-	die "%s: %s: Not a directory" "$pgm" "$DIALOG_TMPDIR"
-
-#
 # Process command-line arguments
 #
 while getopts hvq flag; do
@@ -213,6 +201,18 @@ if [ "$JAIL_BUILD_VERBOSE" = "1" ]; then
 else
 	quiet=1
 fi
+
+#
+# Perform sanity checks
+#
+[ -e "$JAIL_BUILD_REPOS" ] ||
+	die "%s: %s: No such file or directory" "$pgm" "$JAIL_BUILD_REPOS"
+[ -d "$( eval realpath "$JAIL_BUILD_REPOS" )" ] ||
+	die "%s: %s: Not a directory" "$pgm" "$JAIL_BUILD_REPOS"
+[ -e "$DIALOG_TMPDIR" ] ||
+	die "%s: %s: No such file or directory" "$pgm" "$DIALOG_TMPDIR"
+[ -d "$( eval realpath "$DIALOG_TMPDIR" )" ] ||
+	die "%s: %s: Not a directory" "$pgm" "$DIALOG_TMPDIR"
 
 #
 # Display a message to let the user know we're working...
