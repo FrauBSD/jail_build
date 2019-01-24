@@ -6,7 +6,7 @@
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
 # $Revision: 1.0.6 $
-# $Date: 2019-01-24 10:31:47 -0800 $
+# $Date: 2019-01-24 10:36:15 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -203,14 +203,14 @@ dialog_menutag2item()
 #
 # Perform sanity checks
 #
-[ -e "$JAIL_BUILD_REPOS" ] \
-	|| die "%s" "$pgm: $JAIL_BUILD_REPOS: No such file or directory"
-[ -d "$( eval realpath "$JAIL_BUILD_REPOS" )" ] \
-	|| die "%s" "$pgm: $JAIL_BUILD_REPOS: Not a directory"
-[ -e "$DIALOG_TMPDIR" ] \
-	|| die "%s" "$pgm: $DIALOG_TMPDIR: No such file or directory"
-[ -d "$( eval realpath "$DIALOG_TMPDIR" )" ] \
-	|| die "%s" "$pgm: $DIALOG_TMPDIR: Not a directory"
+[ -e "$JAIL_BUILD_REPOS" ] ||
+	die "%s" "$pgm: $JAIL_BUILD_REPOS: No such file or directory"
+[ -d "$( eval realpath "$JAIL_BUILD_REPOS" )" ] ||
+	die "%s" "$pgm: $JAIL_BUILD_REPOS: Not a directory"
+[ -e "$DIALOG_TMPDIR" ] ||
+	die "%s" "$pgm: $DIALOG_TMPDIR: No such file or directory"
+[ -d "$( eval realpath "$DIALOG_TMPDIR" )" ] ||
+	die "%s" "$pgm: $DIALOG_TMPDIR: Not a directory"
 
 #
 # Process command-line arguments
@@ -256,16 +256,16 @@ repositories="$(
 		index=1
 		while read -r dirname; do
 			[ $index -le ${#DIALOG_MENU_TAGS} ] || break
-			tag="$( echo "$DIALOG_MENU_TAGS" \
-				| awk "{print substr(\$1,$index,1)}" )"
+			tag="$( echo "$DIALOG_MENU_TAGS" |
+				awk "{print substr(\$1,$index,1)}" )"
 			echo "'$tag ${dirname##*/}'"
 			echo "'$dirname'"
 			index=$(( $index + 1 ))
 		done
 	)
 )"
-[ "$repositories" ] \
-	|| die "No repositories found in \`%s'." "$JAIL_BUILD_REPOS"
+[ "$repositories" ] ||
+	die "No repositories found in \`%s'." "$JAIL_BUILD_REPOS"
 
 #
 # Prompt the user to select which repository to create the new jail from.
@@ -342,12 +342,12 @@ if [ ! -e "$parentdir" ]; then
 	                you have entered does not exist. Create it now?" 7 60
 
 	[ $? -eq 0 ] || die "User cancelled."
-	mkdir -p "$parentdir" || die "%s" \
-		"$pgm: mkdir: Unable to create directory \`$parentdir'"
+	mkdir -p "$parentdir" ||
+		die "%s" "$pgm: mkdir: Unable to create directory \`$parentdir'"
 else
 	# Make sure it's a directory
-	[ -d "$parentdir" ] \
-		|| die "%s" "$pgm: $parentdir: Not a directory"
+	[ -d "$parentdir" ] ||
+		die "%s" "$pgm: $parentdir: Not a directory"
 fi
 
 #
@@ -368,8 +368,8 @@ if [ -d "$destdir" ]; then
 	# NOTE: Unless TrustedBSD is enabled, the `root' super-user always
 	#       has write ability, even when the permissions are `0000'.
 	#
-	[ -w "$destdir" ] \
-		|| die "%s" "$pgm: $destdir: Permission denied."
+	[ -w "$destdir" ] ||
+		die "%s" "$pgm: $destdir: Permission denied."
 else
 	#
 	# Verify that the parent directory is writable
@@ -524,10 +524,9 @@ eval dialog \
 	--hline "'Press arrows, TAB or ENTER'" \
 	--tree "':'" \
 	"'Review List of Distribution Sets to be Installed`(
-		[ "$missing" ] \
-			&& echo \
-			&& echo 'WARNING!' Missing distribution-sets \
-			        will be skipped.
+		[ "$missing" ] &&
+			echo &&
+			echo 'WARNING!' Missing distribution-sets will be skipped.
 	)`'" -1 -1 13 \
 	"':$repos'" `\
 	(
@@ -571,8 +570,7 @@ for dist in $dists_real; do
 	dist_set="$dist" # for display
 	dist_path="${dist%/*}"  # everything up to last slash
 	dist_name="${dist##*/}" # everything after last slash
-	[ "$dist_name" = "$dist_path" ] \
-		&& dist_set="$dist_name"
+	[ "$dist_name" = "$dist_path" ] && dist_set="$dist_name"
 
 	[ "$verbose" ] || dialog --title "$pgm" --infobox \
 		"Unpacking $dist_set distribution" -1 -1
