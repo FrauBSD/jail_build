@@ -27,8 +27,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.1.0+3 $
-# $Date: 2019-01-24 11:31:02 -0800 $
+# $Revision: 1.1.0+4 $
+# $Date: 2019-01-24 11:32:44 -0800 $
 #
 ############################################################ INFORMATION
 #
@@ -112,16 +112,11 @@ usage()
 
 	exec >&2
 	printf "Usage: %s [OPTIONS]\n" "$pgm"
-
 	printf "OPTIONS:\n"
-	printf "$optfmt" "-h" \
-	        "Print this message to stderr and exit."
-	printf "$optfmt" "-v" \
-	        "Verbose. Enables verbose output during build."
-	printf "$optfmt" "-q" \
-	        "Quiet. Disables verbose output."
+	printf "$optfmt" "-h" "Print this message to stderr and exit."
+	printf "$optfmt" "-v" "Verbose. Enables verbose output during build."
+	printf "$optfmt" "-q" "Quiet. Disables verbose output."
 	printf "\n"
-
 	printf "ENVIRONMENT:\n"
 	printf "$envfmt" "JAIL_BUILD_REPOS" \
 	        "Location of FreeBSD repository where binary"
@@ -137,7 +132,6 @@ usage()
 	        "Directory to store dialog(1) temporary files"
 	printf "$envfmt" "" \
 	        "(default: \`/tmp')"
-
 	die
 }
 
