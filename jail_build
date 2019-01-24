@@ -1,12 +1,14 @@
 #!/bin/sh
 # -*- tab-width:  4 -*- ;; Emacs
 # vi: set tabstop=4     :: Vi/ViM
+############################################################ IDENT(1)
 #
-# Revision: 1.0
-# Last Modified: October 13th, 2010
-############################################################ COPYRIGHT
+# $Title: Tool for building FreeBSD jails from binary distributions $
+# $Copyright: 2010-2019 Devin Teske. All rights reserved. $
+# $Revision: 1.0.2 $
+# $Date: 2019-01-24 10:19:02 -0800 $
 #
-# (c)2010. Devin Teske. All Rights Reserved.
+############################################################ LICENSE
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
@@ -28,9 +30,6 @@
 # LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY
 # OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
 # SUCH DAMAGE.
-#
-# AUTHOR      DATE      DESCRIPTION
-# dteske   2010.09.17   Initial version.
 #
 ############################################################ INFORMATION
 #
