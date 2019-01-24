@@ -4,8 +4,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.8 $
-# $Date: 2019-01-24 10:48:24 -0800 $
+# $Revision: 1.0.9 $
+# $Date: 2019-01-24 10:53:43 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -91,28 +91,6 @@ DIALOG_MENU_TAGS="123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 ############################################################ FUNCTIONS
 
-# fprintf $fd $fmt [$opts ...]
-#
-# Like printf, except allows you to print to a specific file-descriptor. Useful
-# for printing to stderr (fd=2) or some other known file-descriptor.
-#
-fprintf()
-{
-	local fd=$1
-	[ $# -gt 1 ] || return $FAILURE
-	shift 1
-	printf "$@" >&$fd
-}
-
-# eprintf $fmt [$opts ...]
-#
-# Print a message to stderr (fd=2).
-#
-eprintf()
-{
-	fprintf 2 "$@"
-}
-
 # die [$fmt [$opts ... ]]
 #
 # Optionally print a message to stderr before exiting with failure status.
@@ -121,7 +99,7 @@ die()
 {
 	local fmt="$1"
 	[ $# -gt 0 ] && shift 1
-	[  "$fmt"  ] && eprintf "$fmt\n" "$@"
+	[  "$fmt"  ] && printf "$fmt\n" "$@" >&2
 
 	exit $FAILURE
 }
@@ -135,31 +113,32 @@ usage()
 	local optfmt="\t%-6s%s\n"
 	local envfmt="\t%-22s%s\n"
 
-	eprintf "Usage: %s [OPTIONS]\n" "$pgm"
+	exec >&2
+	printf "Usage: %s [OPTIONS]\n" "$pgm"
 
-	eprintf "OPTIONS:\n"
-	eprintf "$optfmt" "-h" \
+	printf "OPTIONS:\n"
+	printf "$optfmt" "-h" \
 	        "Print this message to stderr and exit."
-	eprintf "$optfmt" "-v" \
+	printf "$optfmt" "-v" \
 	        "Verbose. Enables verbose output during build."
-	eprintf "$optfmt" "-q" \
+	printf "$optfmt" "-q" \
 	        "Quiet. Disables verbose output."
-	eprintf "\n"
+	printf "\n"
 
-	eprintf "ENVIRONMENT:\n"
-	eprintf "$envfmt" "JAIL_BUILD_REPOS" \
+	printf "ENVIRONMENT:\n"
+	printf "$envfmt" "JAIL_BUILD_REPOS" \
 	        "Location of FreeBSD repository where binary"
-	eprintf "$envfmt" "" \
+	printf "$envfmt" "" \
 	        "(default: \`/usr/repos')"
-	eprintf "$envfmt" "JAIL_BUILD_DESTDIR" \
+	printf "$envfmt" "JAIL_BUILD_DESTDIR" \
 	        "Default directory to build new jails in"
-	eprintf "$envfmt" "" \
+	printf "$envfmt" "" \
 	        "(default: \`/usr/jail')"
-	eprintf "$envfmt" "JAIL_BUILD_VERBOSE" \
+	printf "$envfmt" "JAIL_BUILD_VERBOSE" \
 	        "Verbosity. Must be zero or one (default: \`0')"
-	eprintf "$envfmt" "DIALOG_TMPDIR" \
+	printf "$envfmt" "DIALOG_TMPDIR" \
 	        "Directory to store dialog(1) temporary files"
-	eprintf "$envfmt" "" \
+	printf "$envfmt" "" \
 	        "(default: \`/tmp')"
 
 	die
