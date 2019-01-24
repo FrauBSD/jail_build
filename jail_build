@@ -5,8 +5,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.4 $
-# $Date: 2019-01-24 10:27:10 -0800 $
+# $Revision: 1.0.5 $
+# $Date: 2019-01-24 10:29:35 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -77,14 +77,13 @@
 
 ############################################################ GLOBALS
 
-# Global exit status variables
-SUCCESS=0
-FAILURE=1
+pgm="${0##*/}" # Program basename
 
 #
-# Program name
+# Global exit status
 #
-progname="${0##*/}"
+SUCCESS=0
+FAILURE=1
 
 #
 # Settings used while interacting with dialog(1)
@@ -137,7 +136,7 @@ usage()
 	local optfmt="\t%-6s%s\n"
 	local envfmt="\t%-22s%s\n"
 
-	eprintf "Usage: %s [OPTIONS]\n" "$progname"
+	eprintf "Usage: %s [OPTIONS]\n" "$pgm"
 
 	eprintf "OPTIONS:\n"
 	eprintf "$optfmt" "-h" \
@@ -205,13 +204,13 @@ dialog_menutag2item()
 # Perform sanity checks
 #
 [ -e "$JAIL_BUILD_REPOS" ] \
-	|| die "%s" "$progname: $JAIL_BUILD_REPOS: No such file or directory"
+	|| die "%s" "$pgm: $JAIL_BUILD_REPOS: No such file or directory"
 [ -d "$( eval realpath "$JAIL_BUILD_REPOS" )" ] \
-	|| die "%s" "$progname: $JAIL_BUILD_REPOS: Not a directory"
+	|| die "%s" "$pgm: $JAIL_BUILD_REPOS: Not a directory"
 [ -e "$DIALOG_TMPDIR" ] \
-	|| die "%s" "$progname: $DIALOG_TMPDIR: No such file or directory"
+	|| die "%s" "$pgm: $DIALOG_TMPDIR: No such file or directory"
 [ -d "$( eval realpath "$DIALOG_TMPDIR" )" ] \
-	|| die "%s" "$progname: $DIALOG_TMPDIR: Not a directory"
+	|| die "%s" "$pgm: $DIALOG_TMPDIR: Not a directory"
 
 #
 # Process command-line arguments
@@ -241,7 +240,7 @@ fi
 #
 # Display a message to let the user know we're working...
 #
-dialog --title "$progname" \
+dialog --title "$pgm" \
        --infobox "Building list of repositories to choose from..." -1 -1
 
 #
@@ -272,7 +271,7 @@ repositories="$(
 # Prompt the user to select which repository to create the new jail from.
 #
 eval dialog \
-	--clear --title "'$progname'" \
+	--clear --title "'$pgm'" \
 	--hline "'Press arrows, TAB or ENTER'" \
 	--menu "'Select repository to build new jail from:'" -1 -1 4 \
 	$repositories \
@@ -297,7 +296,7 @@ repos="$( eval dialog_menutag2item "'$tag'" $repositories )"
 # Prompt the user for location to install new jail to
 #
 dialog \
-	--title "$progname" \
+	--title "$pgm" \
 	--inputbox "Root directory where the new jail will live:" -1 -1 \
 	"$JAIL_BUILD_DESTDIR/<jail_hostname>" \
 	2> "$DIALOG_TMPDIR/dialog.inputbox.$$"
@@ -337,18 +336,18 @@ if [ ! -e "$parentdir" ]; then
 	# It doesn't exist...
 	# ... offer to create it.
 	#
-	dialog --title "$progname" \
+	dialog --title "$pgm" \
 	       --hline "Press arrows, TAB or ENTER" \
 	       --yesno "The parent directory ($parentdir) of the destination \
 	                you have entered does not exist. Create it now?" 7 60
 
 	[ $? -eq 0 ] || die "User cancelled."
 	mkdir -p "$parentdir" || die "%s" \
-		"$progname: mkdir: Unable to create directory \`$parentdir'"
+		"$pgm: mkdir: Unable to create directory \`$parentdir'"
 else
 	# Make sure it's a directory
 	[ -d "$parentdir" ] \
-		|| die "%s" "$progname: $parentdir: Not a directory"
+		|| die "%s" "$pgm: $parentdir: Not a directory"
 fi
 
 #
@@ -356,7 +355,7 @@ fi
 #
 if [ -d "$destdir" ]; then
 	dialog --clear \
-	       --title "$progname" \
+	       --title "$pgm" \
 	       --hline "Press arrows, TAB or ENTER" \
 	       --yesno "The destination directory ($destdir) already exists. \
 	                Are you sure that you wish to proceed?" 7 60
@@ -370,7 +369,7 @@ if [ -d "$destdir" ]; then
 	#       has write ability, even when the permissions are `0000'.
 	#
 	[ -w "$destdir" ] \
-		|| die "%s" "$progname: $destdir: Permission denied."
+		|| die "%s" "$pgm: $destdir: Permission denied."
 else
 	#
 	# Verify that the parent directory is writable
@@ -378,7 +377,7 @@ else
 	# NOTE: Unless TrustedBSD is enabled, the `root' super-user always
 	#       has write ability, even when the permissions are `0000'.
 	#
-	[ -w "$parentdir" ] || die "%s: %s: %s" "$progname" "$parentdir" \
+	[ -w "$parentdir" ] || die "%s: %s: %s" "$pgm" "$parentdir" \
 		"Cannot create jail sub-directory. Permission denied."
 fi
 
@@ -521,7 +520,7 @@ done
 # the top of the list).
 #
 eval dialog \
-	--clear --title "'$progname'" \
+	--clear --title "'$pgm'" \
 	--hline "'Press arrows, TAB or ENTER'" \
 	--tree "':'" \
 	"'Review List of Distribution Sets to be Installed`(
@@ -552,7 +551,7 @@ retval=$?
 # Last Chance!
 #
 eval dialog \
-	--clear --title "'$progname'" \
+	--clear --title "'$pgm'" \
 	--hline "'Press arrows, TAB or ENTER'" \
 	--yesno "'`\
 	( echo "Last Chance!  Are you SURE you want to continue the installation?"
@@ -575,7 +574,7 @@ for dist in $dists_real; do
 	[ "$dist_name" = "$dist_path" ] \
 		&& dist_set="$dist_name"
 
-	[ "$verbose" ] || dialog --title "$progname" --infobox \
+	[ "$verbose" ] || dialog --title "$pgm" --infobox \
 		"Unpacking $dist_set distribution" -1 -1
 	
 	if [ -e "$repos/$dist.tgz" ]; then
@@ -591,7 +590,7 @@ for dist in $dists_real; do
 	fi
 
 	if [ -f "$repos/$dist.mtree" ]; then
-		[ "$verbose" ] || dialog --title "$progname" --infobox \
+		[ "$verbose" ] || dialog --title "$pgm" --infobox \
 			"Running mtree for $dist_set distribution" -1 -1
 		eval mtree -eU -f "'$repos/$dist.mtree'" -p "'$destdir'" \
 			${quiet:+"> /dev/null 2>&1"}
@@ -609,7 +608,7 @@ for m in root var usr; do
 	   *) mdir="$m";;
 	esac
 
-	[ "$verbose" ] || dialog --title "$progname" --infobox \
+	[ "$verbose" ] || dialog --title "$pgm" --infobox \
 		"Running mtree on $m filesystem" -1 -1
 
 	eval mtree -eU \
