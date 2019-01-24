@@ -27,8 +27,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.1.0+2 $
-# $Date: 2019-01-24 11:29:25 -0800 $
+# $Revision: 1.1.0+3 $
+# $Date: 2019-01-24 11:31:02 -0800 $
 #
 ############################################################ INFORMATION
 #
@@ -89,7 +89,7 @@ DIALOG_MENU_TAGS="123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 ############################################################ FUNCTIONS
 
-# die [$fmt [$opts ...]]
+# die [$fmt [$args ...]]
 #
 # Optionally print a message to stderr before exiting with failure status.
 #
