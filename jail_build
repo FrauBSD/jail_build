@@ -4,8 +4,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.9+3 $
-# $Date: 2019-01-24 11:03:40 -0800 $
+# $Revision: 1.0.9+4 $
+# $Date: 2019-01-24 11:12:06 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -178,7 +178,7 @@ dialog_menutag2item()
 ############################################################ MAIN SOURCE
 
 #
-# Process command-line arguments
+# Process command-line options
 #
 while getopts hvq flag; do
 	case "$flag" in
@@ -192,7 +192,7 @@ done
 shift $(( $OPTIND - 1 ))
 
 #
-# Process command-line options.
+# Process command-line options
 #
 verbose=
 quiet=
