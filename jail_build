@@ -5,10 +5,12 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.2 $
-# $Date: 2019-01-24 10:19:02 -0800 $
+# $Revision: 1.0.3 $
+# $Date: 2019-01-24 10:21:22 -0800 $
 #
 ############################################################ LICENSE
+#
+# (c)2010-2019 Devin Teske. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions
