@@ -1,12 +1,10 @@
 #!/bin/sh
-# -*- tab-width:  4 -*- ;; Emacs
-# vi: set tabstop=4     :: Vi/ViM
 ############################################################ IDENT(1)
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.7 $
-# $Date: 2019-01-24 10:42:50 -0800 $
+# $Revision: 1.0.8 $
+# $Date: 2019-01-24 10:47:17 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -343,7 +341,8 @@ if [ ! -e "$parentdir" ]; then
 
 	[ $? -eq 0 ] || die "User cancelled."
 	mkdir -p "$parentdir" ||
-		die "%s: mkdir: Unable to create directory \`%s'" "$pgm" "$parentdir"
+		die "%s: mkdir: Unable to create directory \`%s'" \
+		    "$pgm" "$parentdir"
 else
 	# Make sure it's a directory
 	[ -d "$parentdir" ] ||
@@ -524,9 +523,8 @@ eval dialog \
 	--hline "'Press arrows, TAB or ENTER'" \
 	--tree "':'" \
 	"'Review List of Distribution Sets to be Installed`(
-		[ "$missing" ] &&
-			echo &&
-			echo 'WARNING!' Missing distribution-sets will be skipped.
+		[ "$missing" ] && echo && echo 'WARNING!' \
+			Missing distribution-sets will be skipped.
 	)`'" -1 -1 13 \
 	"':$repos'" `\
 	(
