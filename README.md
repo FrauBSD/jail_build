@@ -1,4 +1,4 @@
-[//]: # ($FrauBSD: jail_build/README.md 2019-01-24 10:06:22 -0800 freebsdfrau $)
+[//]: # ($FrauBSD: jail_build/README.md 2019-01-24 11:28:22 -0800 freebsdfrau $)
 
 # Welcome to [FrauBSD.org/jail\_build](https://fraubsd.org/jail_build)!
 
@@ -11,3 +11,14 @@ The following is required before using `git commit` in this project.
 > `$ .git-hooks/install.sh`
 
 This will ensure the FrauBSD keyword is expanded/updated for each commit.
+
+## About
+
+`jail_build` is a script:
+
++ Be a single-script solution
++ Have zero dependencies outside of FreeBSD base OS
++ Work on any FreeBSD host (4.x minimum)
++ Work with any FreeBSD distribution set
++ Be completely scriptable
++ Use `dialog` for human interactions
