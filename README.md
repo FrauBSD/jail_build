@@ -1,4 +1,4 @@
-[//]: # ($FrauBSD: jail_build/README.md 2019-01-24 12:05:27 -0800 freebsdfrau $)
+[//]: # ($FrauBSD: jail_build/README.md 2019-01-24 12:06:29 -0800 freebsdfrau $)
 
 # Welcome to [FrauBSD.org/jail\_build](https://fraubsd.org/jail_build)!
 
@@ -22,3 +22,7 @@ This will ensure the FrauBSD keyword is expanded/updated for each commit.
 + Work with any FreeBSD distribution set (1.x minimum)
 + Be completely scriptable
 + Use `dialog` for human interactions
+
+## Getting Started
+
+`TODO`
