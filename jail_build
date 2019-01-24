@@ -4,8 +4,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.9 $
-# $Date: 2019-01-24 10:53:43 -0800 $
+# $Revision: 1.0.9+1 $
+# $Date: 2019-01-24 10:59:39 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -99,8 +99,7 @@ die()
 {
 	local fmt="$1"
 	[ $# -gt 0 ] && shift 1
-	[  "$fmt"  ] && printf "$fmt\n" "$@" >&2
-
+	[ "$fmt" ] && printf "$fmt\n" "$@" >&2
 	exit $FAILURE
 }
 
