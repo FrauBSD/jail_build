@@ -5,8 +5,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.6 $
-# $Date: 2019-01-24 10:36:15 -0800 $
+# $Revision: 1.0.7 $
+# $Date: 2019-01-24 10:42:50 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -204,13 +204,13 @@ dialog_menutag2item()
 # Perform sanity checks
 #
 [ -e "$JAIL_BUILD_REPOS" ] ||
-	die "%s" "$pgm: $JAIL_BUILD_REPOS: No such file or directory"
+	die "%s: %s: No such file or directory" "$pgm" "$JAIL_BUILD_REPOS"
 [ -d "$( eval realpath "$JAIL_BUILD_REPOS" )" ] ||
-	die "%s" "$pgm: $JAIL_BUILD_REPOS: Not a directory"
+	die "%s: %s: Not a directory" "$pgm" "$JAIL_BUILD_REPOS"
 [ -e "$DIALOG_TMPDIR" ] ||
-	die "%s" "$pgm: $DIALOG_TMPDIR: No such file or directory"
+	die "%s: %s: No such file or directory" "$pgm" "$DIALOG_TMPDIR"
 [ -d "$( eval realpath "$DIALOG_TMPDIR" )" ] ||
-	die "%s" "$pgm: $DIALOG_TMPDIR: Not a directory"
+	die "%s: %s: Not a directory" "$pgm" "$DIALOG_TMPDIR"
 
 #
 # Process command-line arguments
@@ -343,11 +343,11 @@ if [ ! -e "$parentdir" ]; then
 
 	[ $? -eq 0 ] || die "User cancelled."
 	mkdir -p "$parentdir" ||
-		die "%s" "$pgm: mkdir: Unable to create directory \`$parentdir'"
+		die "%s: mkdir: Unable to create directory \`%s'" "$pgm" "$parentdir"
 else
 	# Make sure it's a directory
 	[ -d "$parentdir" ] ||
-		die "%s" "$pgm: $parentdir: Not a directory"
+		die "%s: %s: Not a directory" "$pgm" "$parentdir"
 fi
 
 #
@@ -369,7 +369,7 @@ if [ -d "$destdir" ]; then
 	#       has write ability, even when the permissions are `0000'.
 	#
 	[ -w "$destdir" ] ||
-		die "%s" "$pgm: $destdir: Permission denied."
+		die "%s: %s: Permission denied." "$pgm" "$destdir"
 else
 	#
 	# Verify that the parent directory is writable
