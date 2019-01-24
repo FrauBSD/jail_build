@@ -5,8 +5,8 @@
 #
 # $Title: Tool for building FreeBSD jails from binary distributions $
 # $Copyright: 2010-2019 Devin Teske. All rights reserved. $
-# $Revision: 1.0.5 $
-# $Date: 2019-01-24 10:29:35 -0800 $
+# $Revision: 1.0.6 $
+# $Date: 2019-01-24 10:31:47 -0800 $
 #
 ############################################################ LICENSE
 #
@@ -92,7 +92,7 @@ DIALOG_MENU_TAGS="123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 ############################################################ FUNCTIONS
 
-# fprintf $fd $fmt [ $opts ... ]
+# fprintf $fd $fmt [$opts ...]
 #
 # Like printf, except allows you to print to a specific file-descriptor. Useful
 # for printing to stderr (fd=2) or some other known file-descriptor.
@@ -105,7 +105,7 @@ fprintf()
 	printf "$@" >&$fd
 }
 
-# eprintf $fmt [ $opts ... ]
+# eprintf $fmt [$opts ...]
 #
 # Print a message to stderr (fd=2).
 #
@@ -114,7 +114,7 @@ eprintf()
 	fprintf 2 "$@"
 }
 
-# die [ $fmt [ $opts ... ]]
+# die [$fmt [$opts ... ]]
 #
 # Optionally print a message to stderr before exiting with failure status.
 #
